@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+
+  "name": "Sound Muter",
+  "description": "This extension mutes sounds from tabs except the current tab.",
+  "version": "1.0",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "icons": { "128": "icon.png" },
+  "permissions": [
+    "tabs",
+    "bookmarks",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "content_scripts": [ {
+    "matches": ["http://*/*", "https://*/*"],
+    "js": ["content.js"],
+    "all_frames": true
+  }]
+}
