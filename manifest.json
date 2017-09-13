@@ -3,6 +3,7 @@
 
   "name": "Mute Inactive Tabs",
   "description": "An extension that mutes sound from tabs except the current tab that's playing sound.",
+  "author": "Jyothi Babu Araja",
   "version": "1.0",
   "homepage_url": "https://github.com/arajajyothibabu/mute-inactive-tabs",
   "background": {

@@ -3,16 +3,11 @@
  */
 
 var enabled = true;
-var path = {"32": "icon.png"};
-var disablePath = {"32": "icond.png"};
 var title = "Mute Inactive Tabs";
 var disableTitle = "Disable Mute Inactive Tabs";
 chrome.browserAction.onClicked.addListener(function(tab) {
-    var currentTitle = title;
     enabled = !enabled;
-    if(enabled){
-        currentTitle = disableTitle;
-    }
+    var currentTitle = enabled ? disableTitle : title;
     chrome.browserAction.setTitle({title: currentTitle});
 });
 
