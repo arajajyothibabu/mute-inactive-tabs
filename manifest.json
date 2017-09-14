@@ -6,6 +6,7 @@
   "description": "An extension that mutes sound from tabs except the current tab that's playing sound.",
   "author": "Jyothi Babu Araja",
   "homepage_url": "https://github.com/arajajyothibabu/mute-inactive-tabs",
+  "minimum_chrome_version": "45",
   "background": {
     "scripts": ["background.js"],
     "persistent": false
@@ -27,7 +28,7 @@
   },
   "permissions": [
     "tabs",
-    "bookmarks",
+    "management",
     "http://*/*",
     "https://*/*"
   ],

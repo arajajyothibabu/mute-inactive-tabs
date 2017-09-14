@@ -2,7 +2,65 @@
  * Created by jyothi on 13/9/17.
  */
 
-var enabled = true;
+var enabled = true, extensionId;
+
+function updateTabAudibleState(tabId, mute) {
+    chrome.tabs.update(tabId, {muted: mute});
+}
+
+function muteAllTabsExcept(tabId) {
+    chrome.tabs.query({}, function (tabs) {
+        tabs.forEach(function (tab) {
+            if (tab.audible && tab.id !== tabId) {
+                updateTabAudibleState(tab.id, true);
+            }
+        });
+    });
+}
+
+function unmuteAllTabs() {
+    chrome.tabs.query({}, function (tabs) {
+        tabs.forEach(function (tab) {
+            if(tab.audible) {
+                updateTabAudibleState(tab.id, false);
+            }
+        });
+    });
+}
+
+function unmuteIfOnlyOneAvailable() {
+    chrome.tabs.query({}, function (tabs) {
+        var tabsWithSound = tabs.some(function (tab) {
+            return tab.audible && !tab.mutedInfo.muted;
+        });
+        if(!tabsWithSound) {
+            var tabsWithSoundButMuted = tabs.filter(function (tab) {
+                return tab.audible && tab.mutedInfo.muted && tab.mutedInfo.extensionId === extensionId;
+            });
+            if (tabsWithSoundButMuted.length > 0) {
+                updateTabAudibleState(tabsWithSoundButMuted[0].id, false);
+            }
+        }
+    });
+}
+
+function executeIfCurrentTabAudible(callback, fallback) {
+    chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
+        var activeTab = tabs[0];
+        if(tabs.length > 0) {
+            updateTabAudibleState(activeTab.id, false);
+            if(activeTab.audible) {
+                callback(activeTab.id);
+            }else{
+                fallback(activeTab.id);
+            }
+        }
+    });
+}
+
+chrome.management.getSelf(function (info) {
+    extensionId = info.id;
+});
 
 chrome.browserAction.onClicked.addListener(function(tab) {
     enabled = !enabled;
@@ -18,33 +76,21 @@ chrome.browserAction.onClicked.addListener(function(tab) {
         }
     });
     if(!enabled){
-        chrome.tabs.query({}, function (tabs) {
-            tabs.forEach(function (tab) {
-                chrome.tabs.update(tab.id, {muted: false});
-            });
-        });
+        unmuteAllTabs();
+    }else{
+        unmuteIfOnlyOneAvailable();
     }
 });
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     switch (request.type) {
         case "check-for-sound":
-            chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
-                var activeTab = tabs[0];
-                if(tabs.length > 0) {
-                    chrome.tabs.update(activeTab.id, {muted: false});
-                    if(enabled){
-                        if (activeTab.audible) {
-                            chrome.tabs.query({}, function (tabs) {
-                                tabs.forEach(function (tab) {
-                                    if (tab.audible && tab.id !== activeTab.id) {
-                                        chrome.tabs.update(tab.id, {muted: true});
-                                    }
-                                });
-                            });
-                        }
-                    }
+            executeIfCurrentTabAudible(function(activeTabId) {
+                if(enabled) {
+                    muteAllTabsExcept(activeTabId);
                 }
+            }, function(activeTabId) {
+                unmuteIfOnlyOneAvailable();
             });
             break;
         default:
