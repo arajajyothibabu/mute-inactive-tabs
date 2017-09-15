@@ -75,6 +75,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
             '128': 'icons/icon' + d + '-128.png'
         }
     });
+    manageAudio();
     if(!enabled){
         unmuteAllTabs();
     }else{
@@ -82,18 +83,25 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     }
 });
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    switch (request.type) {
-        case "check-for-sound":
-            executeIfCurrentTabAudible(function(activeTabId) {
-                if(enabled) {
-                    muteAllTabsExcept(activeTabId);
-                }
-            }, function(activeTabId) {
-                unmuteIfOnlyOneAvailable();
-            });
-            break;
-        default:
+function manageAudio(activeTab) {
+    updateTabAudibleState(activeTab.id, false);
+    if(activeTab.audible && enabled) {
+        muteAllTabsExcept(activeTab.id);
+    }else{
+        unmuteIfOnlyOneAvailable();
     }
-    return true;
+}
+
+var AUDIBLE = "audible";
+
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab){
+    if(changeInfo.hasOwnProperty(AUDIBLE)){
+        manageAudio(tab);
+    }
+});
+
+chrome.tabs.onSelectionChanged.addListener(function(tabId, windowId){
+    chrome.tabs.get(tabId, function(tab){
+        manageAudio(tab);
+    });
 });
