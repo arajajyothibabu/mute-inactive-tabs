@@ -84,8 +84,9 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 });
 
 function manageAudio(activeTab) {
+    if(!enabled) return;
     updateTabAudibleState(activeTab.id, false);
-    if(activeTab.audible && enabled) {
+    if(activeTab.audible) {
         muteAllTabsExcept(activeTab.id);
     }else{
         unmuteIfOnlyOneAvailable();
