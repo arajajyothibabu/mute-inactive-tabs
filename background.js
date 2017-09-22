@@ -75,11 +75,10 @@ chrome.browserAction.onClicked.addListener(function(tab) {
             '128': 'icons/icon' + d + '-128.png'
         }
     });
-    manageAudio();
     if(!enabled){
         unmuteAllTabs();
     }else{
-        unmuteIfOnlyOneAvailable();
+        manageAudio(tab);
     }
 });
 
@@ -96,12 +95,14 @@ function manageAudio(activeTab) {
 var AUDIBLE = "audible";
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab){
+    if(!enabled) return;
     if(changeInfo.hasOwnProperty(AUDIBLE)){
         manageAudio(tab);
     }
 });
 
 chrome.tabs.onSelectionChanged.addListener(function(tabId, windowId){
+    if(!enabled) return;
     chrome.tabs.get(tabId, function(tab){
         manageAudio(tab);
     });
