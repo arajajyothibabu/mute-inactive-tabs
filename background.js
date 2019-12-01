@@ -83,8 +83,13 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     }
 });
 
-function manageAudio(activeTab) {
+function manageAudio(activeTab, windowChanged) {
     if(!enabled) return;
+    if(windowChanged && activeTab.mutedInfo && activeTab.mutedInfo.muted){
+        muteAllTabsExcept(activeTab.id);
+        updateTabAudibleState(activeTab.id, false);
+        return;
+    }
     updateTabAudibleState(activeTab.id, false);
     if(activeTab.audible) {
         muteAllTabsExcept(activeTab.id);
@@ -101,8 +106,21 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab){
     }
 });
 
-chrome.tabs.onSelectionChanged.addListener(function(tabId, windowId){
+chrome.tabs.onActivated.addListener(function(activeInfo){
+    var tabId = activeInfo.tabId;
     chrome.tabs.get(tabId, function(tab){
         manageAudio(tab);
     });
+});
+
+
+chrome.windows.onFocusChanged.addListener(function(windowId){
+    if(windowId && windowId > -1){
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+            var tab = tabs[0];
+            if(tab) {
+                manageAudio(tab, windowId);
+            }
+        });
+    }
 });
